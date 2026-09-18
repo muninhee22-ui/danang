@@ -36,7 +36,7 @@ button{font:inherit;color:inherit}
 .lock input::placeholder{color:var(--t3);font-weight:400}
 .lock input:focus{outline:2px solid var(--blue)}
 .lock-msg{min-height:20px;font-size:13px;color:var(--red)}
-.btn{height:56px;padding:0 20px;border:0;border-radius:16px;background:var(--blue);color:#fff;font-size:17px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:8px;width:100%;transition:transform .12s var(--ease),filter .12s}
+.btn{height:56px;padding:0 20px;border:0;border-radius:16px;text-decoration:none;background:var(--blue);color:#fff;font-size:17px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:8px;width:100%;transition:transform .12s var(--ease),filter .12s}
 .btn:active{transform:scale(.98);filter:brightness(.95)}
 .btn.sub{background:var(--card);color:var(--t1)}
 .btn:focus-visible{outline:2px solid var(--t1);outline-offset:2px}

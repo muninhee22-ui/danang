@@ -124,7 +124,7 @@
 
   /* ---------- 숙소 ---------- */
   function renderStay() {
-    $('#v-stay').innerHTML = '<h2 class="h"><small>호이안 2박, 미케비치 4박, 마지막 1박</small>숙소</h2><div class="card stay">' + D.stays.map(function (s, k) {
+    $('#v-stay').innerHTML = '<h2 class="h"><small>호이안 2박, 다낭 시내 4박, 마지막 1박</small>숙소</h2><div class="card stay">' + D.stays.map(function (s, k) {
       var p = D.places[s.place];
       return '<button type="button" class="row tap" data-k="' + k + '"><span class="ico ' + s.color + '"><i class="ph ph-bed" aria-hidden="true"></i></span><span class="tx"><b>' + esc(p.ko) + '</b><span>' + esc(s.range) + ' · ' + esc(s.city) + '</span><span>' + esc(s.memo) + '</span><span class="loc"><i class="ph ph-map-pin" aria-hidden="true"></i>지도 · 주소</span></span><span class="nights">' + s.nights + '박</span></button>';
     }).join('') + '</div>';
