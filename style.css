@@ -27,11 +27,11 @@ button{font:inherit;color:inherit}
 .ph{font-size:22px}
 
 /* ---------- 잠금 (토스 인증 화면 느낌) ---------- */
-.lock{min-height:100dvh;display:flex;align-items:stretch;justify-content:center;padding:16px 20px calc(20px + env(safe-area-inset-bottom));background:var(--bg)}
+.lock{min-height:100dvh;display:flex;align-items:stretch;justify-content:center;padding:24px 24px calc(20px + env(safe-area-inset-bottom));background:var(--bg)}
 .lock-in{width:100%;max-width:440px;display:flex;flex-direction:column;gap:8px}
-.lock-img{position:relative;border-radius:24px;overflow:hidden;aspect-ratio:4/3;background:var(--card);margin-bottom:20px}
-.lock-img img{width:100%;height:100%;object-fit:cover;object-position:center 30%}
-.lock-chip{position:absolute;left:16px;top:16px;background:rgba(255,255,255,.92);color:var(--t1);font-size:13px;font-weight:700;padding:6px 12px;border-radius:999px}
+.tf{font-family:"Tossface","Apple Color Emoji","Segoe UI Emoji",sans-serif;font-style:normal;line-height:1}
+.lock-ico{font-size:56px;margin:40px 0 20px;display:block}
+.lock-top{font-size:14px;font-weight:700;color:var(--blue);margin-bottom:4px}
 .lock h1{font-size:30px;line-height:1.3}
 .lock-sub{font-size:15px;color:var(--t3);margin-bottom:24px}
 .lock-lbl{font-size:13px;font-weight:600;color:var(--t2);margin-top:4px}
@@ -159,3 +159,28 @@ button{font:inherit;color:inherit}
 
 @media (prefers-reduced-motion: reduce){ .dim,.sheet,.btn,.row,.dates button{transition:none} }
 @media print{ .top,.tabbar,.dates,.nav2,.banner{display:none} .view[hidden]{display:block !important} }
+
+/* ---------- 시계 + 지금 날씨 ---------- */
+.now{background:var(--card);border-radius:20px;padding:14px 16px;margin:4px 0 12px;display:grid;gap:12px}
+.clocks{display:flex;align-items:center;gap:16px}
+.clocks > div{flex:1}
+.clocks small{display:block;font-size:12px;color:var(--t3);font-weight:600}
+.clocks b{display:block;font-size:22px;font-weight:700;line-height:1.2;margin-top:2px}
+.clocks .sep{flex:0 0 1px;height:36px;background:var(--card2)}
+.nowwx{display:flex;align-items:center;gap:10px;padding-top:12px;border-top:1px solid var(--card2)}
+.nowwx .tf{font-size:28px}
+.nowwx b{font-size:22px;font-weight:700}
+.nowwx > span:last-child{font-size:13px;color:var(--t2);line-height:1.4}
+.wx{display:flex;align-items:center;gap:8px;background:var(--blue-bg);border-radius:14px;padding:10px 14px;margin:-4px 0 14px;font-size:14px;color:var(--t2)}
+.wx .tf{font-size:22px}
+.wx b{color:var(--t1);font-weight:700}
+.wxcard b{margin-bottom:2px}
+.wxlist{display:grid;gap:2px;margin-top:10px}
+.wxrow{display:grid;grid-template-columns:44px 30px 1fr auto auto;align-items:center;gap:8px;padding:8px 0;border-top:1px solid var(--card2);font-size:14px}
+.wxrow > b{font-weight:700}
+.wxrow .tf{font-size:20px}
+.wxrow .t{color:var(--t2)}
+.wxrow .tmp{font-weight:600}
+.wxrow .rain{color:var(--blue-t);font-weight:700;min-width:36px;text-align:right}
+.full{width:100%}
+.mt12{margin-top:12px}

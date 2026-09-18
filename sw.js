@@ -1,5 +1,5 @@
 /* 문패밀리 다낭 여행 - 오프라인 캐시 (같은 출처 파일만) */
-var VER = 'mf-202609180610';
+var VER = 'mf-202609180615';
 var PRECACHE = ['./', 'index.html', 'style.css', 'app.js', 'manifest.webmanifest',
   'icons/icon-192.png', 'icons/icon-512.png', 'icons/apple-touch-icon.png',
   'img/hero.jpg', 'img/hero-m.jpg', 'img/d1.jpg', 'img/d2.jpg', 'img/d3.jpg', 'img/d4.jpg', 'img/d5a.jpg', 'img/d5b.jpg', 'img/d6.jpg', 'img/d7.jpg'];

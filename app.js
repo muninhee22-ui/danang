@@ -60,6 +60,7 @@
     app.innerHTML =
       '<header class="top"><h1>' + esc(D.trip.title) + '</h1><span class="dday">' + esc(ddayText()) + '</span></header>' +
       '<div id="banner"></div>' +
+      '<div class="view" id="now"></div>' +
       '<section class="view" id="v-days"></section><section class="view" id="v-stay" hidden></section><section class="view" id="v-flight" hidden></section><section class="view" id="v-memo" hidden></section><section class="view" id="v-check" hidden></section>' +
       '<footer class="foot"><p>' + esc(D.trip.sub) + '</p><button type="button" class="link" id="lockBtn">이 폰에서 잠그기</button><details class="credits"><summary>사진 출처</summary><ul>' + D.credits.map(function (c) { return '<li>' + esc(c) + '</li>'; }).join('') + '</ul></details></footer>' +
       '<nav class="tabbar" aria-label="메뉴"><div>' +
@@ -68,6 +69,7 @@
       }).join('') + '</div></nav>' +
       '<div class="dim" id="dim" hidden></div><div class="sheet" id="sheet" role="dialog" aria-modal="true" hidden></div>';
     renderDays(); renderStay(); renderFlight(); renderMemo(); renderCheck(); banner();
+    paintNow(); setInterval(paintNow, 30000); loadWeather();
     $$('.tabbar button').forEach(function (b) { b.addEventListener('click', function () { showTab(b.dataset.tab); }); });
     $('#lockBtn').addEventListener('click', function () { drop(KEY_STORE); location.reload(); });
     $('#dim').addEventListener('click', closeSheet);
@@ -107,6 +109,7 @@
     var i = D.days.indexOf(d);
     $('#dayBody').innerHTML =
       '<h2 class="h"><small>' + esc(d.label) + (d.n === state.todayN ? ' · 오늘' : '') + ' · ' + esc(d.where) + '</small>' + esc(d.title) + '</h2>' +
+      '<div class="wx" id="wxDay" hidden></div>' +
       (d.photo ? '<div class="photo"><img src="' + esc(d.photo) + '" alt="' + esc(d.alt) + '"></div>' : '') +
       '<div class="card">' + d.items.map(function (it, k) {
         var tap = it.place || it.places;
@@ -120,6 +123,48 @@
       '<div class="nav2">' + (i > 0 ? '<button type="button" class="btn sub" data-go="' + D.days[i - 1].n + '">← ' + (i) + '일차</button>' : '') + (i < D.days.length - 1 ? '<button type="button" class="btn sub" data-go="' + D.days[i + 1].n + '">' + (i + 2) + '일차 →</button>' : '') + '</div>';
     $$('#dayBody .row.tap').forEach(function (b) { b.addEventListener('click', function () { var it = d.items[+b.dataset.i]; openPlaces(it.places || [it.place], it.title); }); });
     $$('#dayBody [data-go]').forEach(function (b) { b.addEventListener('click', function () { state.day = +b.dataset.go; store(DAY_STORE, state.day); history.replaceState(null, '', '#d' + state.day); renderDay(); window.scrollTo({ top: 0, behavior: 'smooth' }); }); });
+    paintWx();
+  }
+
+  /* ---------- 시계 + 날씨 (Open-Meteo, 키 없음) ---------- */
+  var WX = null, WX_STORE = 'mf_danang_wx';
+  var WX_URL = 'https://api.open-meteo.com/v1/forecast?latitude=16.0678&longitude=108.2208&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max&current=temperature_2m,weather_code,relative_humidity_2m,apparent_temperature&timezone=Asia%2FBangkok&forecast_days=16';
+  var WXT = { 0: ['☀️', '맑음'], 1: ['🌤️', '대체로 맑음'], 2: ['⛅', '구름 조금'], 3: ['☁️', '흐림'], 45: ['🌫️', '안개'], 48: ['🌫️', '안개'], 51: ['🌦️', '이슬비'], 53: ['🌦️', '이슬비'], 55: ['🌧️', '이슬비'], 56: ['🌧️', '이슬비'], 57: ['🌧️', '이슬비'], 61: ['🌧️', '비'], 63: ['🌧️', '비'], 65: ['🌧️', '강한 비'], 66: ['🌧️', '비'], 67: ['🌧️', '비'], 71: ['🌨️', '눈'], 73: ['🌨️', '눈'], 75: ['🌨️', '눈'], 77: ['🌨️', '눈'], 80: ['🌦️', '소나기'], 81: ['🌧️', '소나기'], 82: ['⛈️', '강한 소나기'], 95: ['⛈️', '뇌우'], 96: ['⛈️', '뇌우'], 99: ['⛈️', '뇌우'] };
+  function wxOf(code) { return WXT[code] || ['🌤️', '']; }
+  function clock(tz) { try { return new Intl.DateTimeFormat('ko-KR', { timeZone: tz, hour: 'numeric', minute: '2-digit', hour12: true }).format(new Date()); } catch (e) { return ''; } }
+  function paintNow() {
+    var el = $('#now'); if (!el) return;
+    var cur = WX && WX.current, w = cur ? wxOf(cur.weather_code) : null;
+    el.innerHTML = '<div class="now"><div class="clocks"><div><small>한국</small><b>' + esc(clock('Asia/Seoul')) + '</b></div><div class="sep"></div><div><small>베트남 (2시간 느림)</small><b>' + esc(clock('Asia/Ho_Chi_Minh')) + '</b></div></div>' +
+      (cur ? '<div class="nowwx"><span class="tf">' + w[0] + '</span><b>' + Math.round(cur.temperature_2m) + '°</b><span>지금 다낭 · ' + esc(w[1]) + ' · 체감 ' + Math.round(cur.apparent_temperature) + '° · 습도 ' + cur.relative_humidity_2m + '%</span></div>' : '<div class="nowwx"><span class="tf">🌤️</span><span>다낭 날씨 불러오는 중…</span></div>') + '</div>';
+  }
+  function loadWeather() {
+    var c = load(WX_STORE);
+    try { if (c) { var o = JSON.parse(c); if (Date.now() - o.t < 3600000) { WX = o.d; paintNow(); paintWx(); return; } } } catch (e) {}
+    if (!window.fetch) return;
+    fetch(WX_URL).then(function (r) { return r.json(); }).then(function (d) { WX = d; store(WX_STORE, JSON.stringify({ t: Date.now(), d: d })); paintNow(); paintWx(); })
+      .catch(function () { var n = $('#now .nowwx span:last-child'); if (n) n.textContent = '날씨는 인터넷이 연결되면 나와요'; });
+  }
+  function dayWx(date) {
+    if (!WX || !WX.daily) return null;
+    var i = WX.daily.time.indexOf(date); if (i < 0) return null;
+    return { w: wxOf(WX.daily.weather_code[i]), max: Math.round(WX.daily.temperature_2m_max[i]), min: Math.round(WX.daily.temperature_2m_min[i]), rain: WX.daily.precipitation_probability_max[i] };
+  }
+  function paintWx() {
+    var el = $('#wxDay');
+    if (el) {
+      var d = D.days.filter(function (x) { return x.n === state.day; })[0], f = d && dayWx(d.date);
+      if (f) { el.hidden = false; el.innerHTML = '<span class="tf">' + f.w[0] + '</span><b>' + esc(f.w[1]) + '</b><span>최고 ' + f.max + '° · 최저 ' + f.min + '° · 비 올 확률 ' + f.rain + '%</span>'; }
+      else el.hidden = true;
+    }
+    var m = $('#wxMemo');
+    if (m) {
+      var rows = D.days.map(function (d) {
+        var f = dayWx(d.date), dt = ymd(d.date), wd = '일월화수목금토'[dt.getDay()];
+        return '<div class="wxrow"><b>' + dt.getDate() + ' ' + wd + '</b>' + (f ? '<span class="tf">' + f.w[0] + '</span><span class="t">' + esc(f.w[1]) + '</span><span class="tmp">' + f.max + '° / ' + f.min + '°</span><span class="rain">' + f.rain + '%</span>' : '<span class="t">예보 없음</span>') + '</div>';
+      }).join('');
+      m.innerHTML = '<div class="memo wxcard"><div class="full"><b>다낭 일기예보</b><p>' + (WX ? '9월 21일 ~ 28일. 오른쪽은 비 올 확률. 매시간 갱신' : '인터넷이 연결되면 나와요') + '</p>' + (WX ? '<div class="wxlist">' + rows + '</div>' : '') + '</div></div>';
+    }
   }
 
   /* ---------- 숙소 ---------- */
@@ -144,7 +189,7 @@
 
   /* ---------- 메모 ---------- */
   function renderMemo() {
-    $('#v-memo').innerHTML = '<h2 class="h"><small>알아두면 편한 것</small>여행 메모</h2>' + D.memos.map(function (m) {
+    $('#v-memo').innerHTML = '<h2 class="h"><small>알아두면 편한 것</small>여행 메모</h2><div id="wxMemo"></div>' + D.memos.map(function (m) {
       return '<div class="memo"><span class="ico ' + m.c + '"><i class="ph ph-' + esc(m.icon) + '" aria-hidden="true"></i></span><div><b>' + esc(m.title) + '</b><p>' + esc(m.body) + '</p></div></div>';
     }).join('');
   }
@@ -167,7 +212,7 @@
     var sheet = $('#sheet'), dim = $('#dim');
     var list = ids.map(function (id) { return D.places[id]; }).filter(Boolean);
     if (!list.length) return;
-    sheet.innerHTML = '<div class="grip"></div>' + (list.length > 1 ? '<h2>' + esc(title || '장소') + '</h2><p class="en">아래에서 골라 누르세요</p><div class="card" style="margin-top:12px">' + list.map(function (p, k) {
+    sheet.innerHTML = '<div class="grip"></div>' + (list.length > 1 ? '<h2>' + esc(title || '장소') + '</h2><p class="en">아래에서 골라 누르세요</p><div class="card mt12">' + list.map(function (p, k) {
       return '<button type="button" class="row tap" data-k="' + k + '"><span class="ico blue"><i class="ph ph-map-pin" aria-hidden="true"></i></span><span class="tx"><b>' + esc(p.ko) + '</b><span>' + esc(p.address || p.en) + '</span></span></button>';
     }).join('') + '</div>' : placeHtml(list[0]));
     sheet.hidden = false; dim.hidden = false;
