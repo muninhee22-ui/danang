@@ -1,0 +1,17 @@
+{
+  "name": "문패밀리 다낭 여행",
+  "short_name": "다낭여행",
+  "description": "2026년 9월 21일부터 28일까지, 문패밀리 다낭·호이안 여행 일정",
+  "lang": "ko",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#FAFAF8",
+  "theme_color": "#17181A",
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
