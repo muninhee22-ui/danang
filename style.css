@@ -184,3 +184,19 @@ button{font:inherit;color:inherit}
 .wxrow .rain{color:var(--blue-t);font-weight:700;min-width:36px;text-align:right}
 .full{width:100%}
 .mt12{margin-top:12px}
+/* 일주일 예보 (지금 카드 안) */
+.wkhead{display:flex;justify-content:space-between;align-items:baseline;padding-top:12px;border-top:1px solid var(--card2)}
+.wkhead b{font-size:14px;font-weight:700}
+.wkhead span{font-size:11px;color:var(--t3)}
+.wxweek{display:flex;gap:6px;overflow-x:auto;margin:0 -16px;padding:0 16px 2px;scrollbar-width:none;scroll-snap-type:x proximity}
+.wxweek::-webkit-scrollbar{display:none}
+.wk{flex:0 0 58px;scroll-snap-align:start;display:flex;flex-direction:column;align-items:center;gap:2px;padding:10px 4px;border:0;border-radius:14px;background:var(--bg);cursor:pointer;font-variant-numeric:tabular-nums}
+.wk small{font-size:11px;color:var(--t3);font-weight:600}
+.wk > b{font-size:15px;font-weight:700;line-height:1.2}
+.wk .tf{font-size:24px;margin:4px 0 2px}
+.wk em{font-style:normal;font-size:13px;font-weight:700;line-height:1.3}
+.wk em.lo{color:var(--t3);font-weight:500}
+.wk i{font-style:normal;font-size:12px;font-weight:700;color:var(--blue-t);margin-top:2px}
+.wk.on{background:var(--blue);color:#fff}
+.wk.on small,.wk.on em.lo,.wk.on i{color:rgba(255,255,255,.85)}
+.wk:active{transform:scale(.96)}

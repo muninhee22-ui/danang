@@ -136,7 +136,12 @@
     var el = $('#now'); if (!el) return;
     var cur = WX && WX.current, w = cur ? wxOf(cur.weather_code) : null;
     el.innerHTML = '<div class="now"><div class="clocks"><div><small>한국</small><b>' + esc(clock('Asia/Seoul')) + '</b></div><div class="sep"></div><div><small>베트남 (2시간 느림)</small><b>' + esc(clock('Asia/Ho_Chi_Minh')) + '</b></div></div>' +
-      (cur ? '<div class="nowwx"><span class="tf">' + w[0] + '</span><b>' + Math.round(cur.temperature_2m) + '°</b><span>지금 다낭 · ' + esc(w[1]) + ' · 체감 ' + Math.round(cur.apparent_temperature) + '° · 습도 ' + cur.relative_humidity_2m + '%</span></div>' : '<div class="nowwx"><span class="tf">🌤️</span><span>다낭 날씨 불러오는 중…</span></div>') + '</div>';
+      (cur ? '<div class="nowwx"><span class="tf">' + w[0] + '</span><b>' + Math.round(cur.temperature_2m) + '°</b><span>지금 다낭 · ' + esc(w[1]) + ' · 체감 ' + Math.round(cur.apparent_temperature) + '° · 습도 ' + cur.relative_humidity_2m + '%</span></div>' : '<div class="nowwx"><span class="tf">🌤️</span><span>다낭 날씨 불러오는 중…</span></div>') +
+      (WX ? '<div class="wkhead"><b>여행 기간 예보</b><span>맨 아래 파란 숫자가 비 올 확률</span></div><div class="wxweek">' + D.days.map(function (d) {
+        var f = dayWx(d.date), dt = ymd(d.date), wd = '일월화수목금토'[dt.getDay()];
+        return '<button type="button" class="wk' + (d.n === state.day ? ' on' : '') + '" data-n="' + d.n + '"><small>' + wd + '</small><b>' + dt.getDate() + '</b>' + (f ? '<span class="tf">' + f.w[0] + '</span><em>' + f.max + '°</em><em class="lo">' + f.min + '°</em><i>' + f.rain + '%</i>' : '<span class="tf">🌤️</span><em>-</em><em class="lo">-</em><i>-</i>') + '</button>';
+      }).join('') + '</div>' : '') + '</div>';
+    $$('#now .wk').forEach(function (b) { b.addEventListener('click', function () { state.day = +b.dataset.n; store(DAY_STORE, state.day); history.replaceState(null, '', '#d' + state.day); showTab('days', true); renderDay(); paintNow(); }); });
   }
   function loadWeather() {
     var c = load(WX_STORE);
