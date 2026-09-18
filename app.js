@@ -14,6 +14,19 @@
   function $(sel, root) { return (root || app).querySelector(sel); }
   function $$(sel, root) { return Array.prototype.slice.call((root || app).querySelectorAll(sel)); }
 
+  /* ---------- 낮·밤 모드 (시스템 따름, 버튼으로 고정) ---------- */
+  var THEME_STORE = 'mf_danang_theme';
+  function curTheme() { var t = document.documentElement.dataset.theme; if (t) return t; return matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'; }
+  function applyTheme(t) {
+    if (t) document.documentElement.dataset.theme = t; else delete document.documentElement.dataset.theme;
+    var mc = document.querySelector('meta[name="theme-color"]:not([media])');
+    if (!mc) { mc = document.createElement('meta'); mc.name = 'theme-color'; document.head.appendChild(mc); }
+    mc.content = curTheme() === 'dark' ? '#17171C' : '#FFFFFF';
+    var b = document.getElementById('themeBtn'); if (b) { b.innerHTML = '<i class="ph ph-' + (curTheme() === 'dark' ? 'sun' : 'moon') + '" aria-hidden="true"></i>'; b.setAttribute('aria-label', curTheme() === 'dark' ? '낮 모드로' : '밤 모드로'); }
+  }
+  applyTheme(load(THEME_STORE) || '');
+  function toggleTheme() { var t = curTheme() === 'dark' ? 'light' : 'dark'; store(THEME_STORE, t); applyTheme(t); }
+
   if (!window.crypto || !crypto.subtle) { msg.textContent = '이 브라우저에서는 열 수 없어요. 크롬이나 사파리로 열어 주세요.'; return; }
 
   function deriveKey(pin) {
@@ -58,7 +71,7 @@
     else { state.day = state.todayN || +(load(DAY_STORE) || 1) || 1; }
     if (!m && state.todayN) state.day = state.todayN;
     app.innerHTML =
-      '<header class="top"><h1>' + esc(D.trip.title) + '</h1><span class="dday">' + esc(ddayText()) + '</span></header>' +
+      '<header class="top"><h1>' + esc(D.trip.title) + '</h1><span class="r"><span class="dday">' + esc(ddayText()) + '</span><button type="button" class="tbtn" id="themeBtn"></button></span></header>' +
       '<div id="banner"></div>' +
       '<div class="view" id="now"></div>' +
       '<section class="view" id="v-days"></section><section class="view" id="v-stay" hidden></section><section class="view" id="v-flight" hidden></section><section class="view" id="v-memo" hidden></section><section class="view" id="v-check" hidden></section>' +
@@ -72,6 +85,7 @@
     paintNow(); setInterval(paintNow, 30000); loadWeather();
     $$('.tabbar button').forEach(function (b) { b.addEventListener('click', function () { showTab(b.dataset.tab); }); });
     $('#lockBtn').addEventListener('click', function () { drop(KEY_STORE); location.reload(); });
+    $('#themeBtn').addEventListener('click', toggleTheme); applyTheme(document.documentElement.dataset.theme || '');
     $('#dim').addEventListener('click', closeSheet);
     showTab(state.tab, true);
     window.addEventListener('hashchange', function () {
@@ -148,7 +162,7 @@
     try { if (c) { var o = JSON.parse(c); if (Date.now() - o.t < 3600000) { WX = o.d; paintNow(); paintWx(); return; } } } catch (e) {}
     if (!window.fetch) return;
     fetch(WX_URL).then(function (r) { return r.json(); }).then(function (d) { WX = d; store(WX_STORE, JSON.stringify({ t: Date.now(), d: d })); paintNow(); paintWx(); })
-      .catch(function () { var n = $('#now .nowwx span:last-child'); if (n) n.textContent = '날씨는 인터넷이 연결되면 나와요'; });
+      .catch(function () { try { var o2 = JSON.parse(load(WX_STORE) || 'null'); if (o2 && o2.d) { WX = o2.d; paintNow(); paintWx(); return; } } catch (e) {} var n = $('#now .nowwx span:last-child'); if (n) n.textContent = '날씨는 인터넷이 연결되면 나와요'; });
   }
   function dayWx(date) {
     if (!WX || !WX.daily) return null;
