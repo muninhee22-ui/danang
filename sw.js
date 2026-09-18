@@ -1,7 +1,7 @@
 /* 문패밀리 다낭 여행 - 오프라인 캐시. 같은 출처 파일 + 폰트 CDN(cdn.jsdelivr.net) 런타임 캐시 */
-var VER = 'mf-202609180648';
-var PRECACHE = ['./', 'index.html', 'style.css?v=202609180648', 'app.js?v=202609180648', 'manifest.webmanifest',
-  'vendor/phosphor/style.css?v=202609180648', 'vendor/phosphor/Phosphor.woff2',
+var VER = 'mf-202609180650';
+var PRECACHE = ['./', 'index.html', 'style.css?v=202609180650', 'app.js?v=202609180650', 'manifest.webmanifest',
+  'vendor/phosphor/style.css?v=202609180650', 'vendor/phosphor/Phosphor.woff2',
   'icons/icon-192.png', 'icons/icon-512.png', 'icons/apple-touch-icon.png',
   'img/hero.jpg', 'img/hero-m.jpg', 'img/d1.jpg', 'img/d2.jpg', 'img/d3.jpg', 'img/d4.jpg', 'img/d5a.jpg', 'img/d5b.jpg', 'img/d6.jpg', 'img/d7.jpg'];
 var CDN = /^https:\/\/cdn\.jsdelivr\.net\//;
