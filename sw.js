@@ -1,7 +1,7 @@
 /* 문패밀리 다낭 여행 - 오프라인 캐시. 같은 출처 파일 + 폰트 CDN(cdn.jsdelivr.net) 런타임 캐시 */
-var VER = 'mf-202609180628';
-var PRECACHE = ['./', 'index.html', 'style.css', 'app.js', 'manifest.webmanifest',
-  'vendor/phosphor/style.css', 'vendor/phosphor/Phosphor.woff2',
+var VER = 'mf-202609180647';
+var PRECACHE = ['./', 'index.html', 'style.css?v=202609180647', 'app.js?v=202609180647', 'manifest.webmanifest',
+  'vendor/phosphor/style.css?v=202609180647', 'vendor/phosphor/Phosphor.woff2',
   'icons/icon-192.png', 'icons/icon-512.png', 'icons/apple-touch-icon.png',
   'img/hero.jpg', 'img/hero-m.jpg', 'img/d1.jpg', 'img/d2.jpg', 'img/d3.jpg', 'img/d4.jpg', 'img/d5a.jpg', 'img/d5b.jpg', 'img/d6.jpg', 'img/d7.jpg'];
 var CDN = /^https:\/\/cdn\.jsdelivr\.net\//;
@@ -34,7 +34,7 @@ self.addEventListener('fetch', function (e) {
     return;
   }
   // 나머지(사진·CSS·JS·폰트·CDN): 캐시 먼저, 없으면 네트워크 후 저장
-  e.respondWith(caches.match(req, { ignoreSearch: same }).then(function (r) {
+  e.respondWith(caches.match(req).then(function (r) {
     return r || fetch(req).then(function (res) {
       if (res && (res.ok || res.type === 'opaque')) { var copy = res.clone(); caches.open(VER).then(function (c) { c.put(req, copy); }); }
       return res;

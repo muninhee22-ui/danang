@@ -22,7 +22,7 @@
     var mc = document.querySelector('meta[name="theme-color"]:not([media])');
     if (!mc) { mc = document.createElement('meta'); mc.name = 'theme-color'; document.head.appendChild(mc); }
     mc.content = curTheme() === 'dark' ? '#17171C' : '#FFFFFF';
-    var b = document.getElementById('themeBtn'); if (b) { b.innerHTML = '<i class="ph ph-' + (curTheme() === 'dark' ? 'sun' : 'moon') + '" aria-hidden="true"></i>'; b.setAttribute('aria-label', curTheme() === 'dark' ? '낮 모드로' : '밤 모드로'); }
+    var seg = document.getElementById('themeSeg'); if (seg) { var ct = curTheme(); Array.prototype.forEach.call(seg.querySelectorAll('button'), function (b) { b.classList.toggle('on', b.dataset.t === ct); b.setAttribute('aria-pressed', b.dataset.t === ct ? 'true' : 'false'); }); }
   }
   applyTheme(load(THEME_STORE) || '');
   function toggleTheme() { var t = curTheme() === 'dark' ? 'light' : 'dark'; store(THEME_STORE, t); applyTheme(t); }
@@ -71,7 +71,7 @@
     else { state.day = state.todayN || +(load(DAY_STORE) || 1) || 1; }
     if (!m && state.todayN) state.day = state.todayN;
     app.innerHTML =
-      '<header class="top"><h1>' + esc(D.trip.title) + '</h1><span class="r"><span class="dday">' + esc(ddayText()) + '</span><button type="button" class="tbtn" id="themeBtn"></button></span></header>' +
+      '<header class="top"><h1><b>Moon Family</b><span>다낭 여행</span></h1><span class="r"><span class="dday">' + esc(ddayText()) + '</span><button type="button" class="tbtn" id="refreshBtn" aria-label="새로고침"><i class="ph ph-arrows-clockwise" aria-hidden="true"></i></button><span class="seg" id="themeSeg" role="group" aria-label="낮·밤 모드"><button type="button" data-t="light" aria-label="낮 모드"><i class="ph ph-sun" aria-hidden="true"></i></button><button type="button" data-t="dark" aria-label="밤 모드"><i class="ph ph-moon" aria-hidden="true"></i></button></span></span></header>' +
       '<div id="banner"></div>' +
       '<div class="view" id="now"></div>' +
       '<section class="view" id="v-days"></section><section class="view" id="v-stay" hidden></section><section class="view" id="v-flight" hidden></section><section class="view" id="v-memo" hidden></section><section class="view" id="v-check" hidden></section>' +
@@ -85,7 +85,13 @@
     paintNow(); setInterval(paintNow, 30000); loadWeather();
     $$('.tabbar button').forEach(function (b) { b.addEventListener('click', function () { showTab(b.dataset.tab); }); });
     $('#lockBtn').addEventListener('click', function () { drop(KEY_STORE); location.reload(); });
-    $('#themeBtn').addEventListener('click', toggleTheme); applyTheme(document.documentElement.dataset.theme || '');
+    $$('#themeSeg button').forEach(function (b) { b.addEventListener('click', function () { store(THEME_STORE, b.dataset.t); applyTheme(b.dataset.t); }); }); applyTheme(document.documentElement.dataset.theme || '');
+    $('#refreshBtn').addEventListener('click', function () {
+      var b = $('#refreshBtn'); b.classList.add('spin');
+      drop(WX_STORE);
+      var p = ('serviceWorker' in navigator) ? navigator.serviceWorker.getRegistration().then(function (r) { return r && r.update(); }).catch(function () {}) : Promise.resolve();
+      p.then(function () { setTimeout(function () { location.reload(); }, 400); });
+    });
     $('#dim').addEventListener('click', closeSheet);
     showTab(state.tab, true);
     window.addEventListener('hashchange', function () {
@@ -151,18 +157,30 @@
     var cur = WX && WX.current, w = cur ? wxOf(cur.weather_code) : null;
     el.innerHTML = '<div class="now"><div class="clocks"><div><small>한국</small><b>' + esc(clock('Asia/Seoul')) + '</b></div><div class="sep"></div><div><small>베트남 (2시간 느림)</small><b>' + esc(clock('Asia/Ho_Chi_Minh')) + '</b></div></div>' +
       (cur ? '<div class="nowwx"><span class="tf">' + w[0] + '</span><b>' + Math.round(cur.temperature_2m) + '°</b><span>지금 다낭 · ' + esc(w[1]) + ' · 체감 ' + Math.round(cur.apparent_temperature) + '° · 습도 ' + cur.relative_humidity_2m + '%</span></div>' : '<div class="nowwx"><span class="tf">🌤️</span><span>다낭 날씨 불러오는 중…</span></div>') +
-      (WX ? '<div class="wkhead"><b>여행 기간 예보</b><span>맨 아래 파란 숫자가 비 올 확률</span></div><div class="wxweek">' + D.days.map(function (d) {
+      (WX ? '<div class="wkhead"><b>여행 기간 예보</b><span>' + esc(wxStamp()) + ' · 파란 숫자는 비 올 확률</span></div><div class="wxweek">' + D.days.map(function (d) {
         var f = dayWx(d.date), dt = ymd(d.date), wd = '일월화수목금토'[dt.getDay()];
         return '<button type="button" class="wk' + (d.n === state.day ? ' on' : '') + '" data-n="' + d.n + '"><small>' + wd + '</small><b>' + dt.getDate() + '</b>' + (f ? '<span class="tf">' + f.w[0] + '</span><em>' + f.max + '°</em><em class="lo">' + f.min + '°</em><i>' + f.rain + '%</i>' : '<span class="tf">🌤️</span><em>-</em><em class="lo">-</em><i>-</i>') + '</button>';
       }).join('') + '</div>' : '') + '</div>';
     $$('#now .wk').forEach(function (b) { b.addEventListener('click', function () { state.day = +b.dataset.n; store(DAY_STORE, state.day); history.replaceState(null, '', '#d' + state.day); showTab('days', true); renderDay(); paintNow(); }); });
   }
+  var WX_AT = 0;
   function loadWeather() {
-    var c = load(WX_STORE);
-    try { if (c) { var o = JSON.parse(c); if (Date.now() - o.t < 3600000) { WX = o.d; paintNow(); paintWx(); return; } } } catch (e) {}
+    // 항상 네트워크 먼저(실시간). 실패했을 때만 저장본.
     if (!window.fetch) return;
-    fetch(WX_URL).then(function (r) { return r.json(); }).then(function (d) { WX = d; store(WX_STORE, JSON.stringify({ t: Date.now(), d: d })); paintNow(); paintWx(); })
-      .catch(function () { try { var o2 = JSON.parse(load(WX_STORE) || 'null'); if (o2 && o2.d) { WX = o2.d; paintNow(); paintWx(); return; } } catch (e) {} var n = $('#now .nowwx span:last-child'); if (n) n.textContent = '날씨는 인터넷이 연결되면 나와요'; });
+    fetch(WX_URL, { cache: 'no-store' }).then(function (r) { if (!r.ok) throw new Error(r.status); return r.json(); })
+      .then(function (d) { WX = d; WX_AT = Date.now(); store(WX_STORE, JSON.stringify({ t: WX_AT, d: d })); paintNow(); paintWx(); })
+      .catch(function () {
+        try { var o2 = JSON.parse(load(WX_STORE) || 'null'); if (o2 && o2.d) { WX = o2.d; WX_AT = o2.t || 0; paintNow(); paintWx(); return; } } catch (e) {}
+        var n = $('#now .nowwx span:last-child'); if (n) n.textContent = '날씨는 인터넷이 연결되면 나와요';
+      });
+  }
+  setInterval(loadWeather, 15 * 60000);
+  document.addEventListener('visibilitychange', function () { if (!document.hidden && D) { paintNow(); loadWeather(); } });
+  window.addEventListener('online', function () { if (D) loadWeather(); });
+  function wxStamp() {
+    if (!WX_AT) return '';
+    var m = Math.round((Date.now() - WX_AT) / 60000);
+    return m < 1 ? '방금 업데이트' : m < 60 ? m + '분 전 업데이트' : clock('Asia/Seoul') + ' 기준';
   }
   function dayWx(date) {
     if (!WX || !WX.daily) return null;
@@ -239,16 +257,47 @@
     document.body.style.overflow = 'hidden';
     bindSheet(list);
   }
-  function placeHtml(p) {
+  var sheetStack = [];
+  function nearbyHtml(p) {
+    var a = p.area && D.areas && D.areas[p.area]; if (!a) return '';
+    function rows(list, kind) {
+      if (!list || !list.length) return '';
+      return '<div class="card nb">' + list.map(function (x, i) {
+        return '<button type="button" class="row tap" data-nb="' + kind + ':' + i + '"><span class="ico ' + (kind === 'food' ? 'orange' : 'green') + '"><i class="ph ph-' + (kind === 'food' ? 'fork-knife' : 'star') + '" aria-hidden="true"></i></span><span class="tx"><b>' + esc(x.ko) + '</b><span>' + esc(x.note || x.address) + '</span></span><i class="ph ph-caret-right nbc" aria-hidden="true"></i></button>';
+      }).join('') + '</div>';
+    }
+    var s = rows(a.spots, 'spots'), fd = rows(a.food, 'food');
+    if (!s && !fd) return '';
+    return '<h3 class="nbh">' + esc(a.name) + ' 근처</h3>' + (s ? '<p class="nbl"><i class="ph ph-star" aria-hidden="true"></i>가볼 만한 곳</p>' + s : '') + (fd ? '<p class="nbl"><i class="ph ph-fork-knife" aria-hidden="true"></i>맛집</p>' + fd : '');
+  }
+  function placeHtml(p, backTo) {
     var q = mapQuery(p), gm = 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(q);
-    return '<h2>' + esc(p.ko) + '</h2><p class="en">' + esc(p.en) + '</p>' +
+    return (backTo ? '<button type="button" class="back" id="sheetBack"><i class="ph ph-caret-left" aria-hidden="true"></i>' + esc(backTo) + '</button>' : '') +
+      '<h2>' + esc(p.ko) + '</h2><p class="en">' + esc(p.en) + '</p>' + (p.note ? '<p class="pnote">' + esc(p.note) + '</p>' : '') +
       '<div class="addr"><i class="ph ph-map-pin" aria-hidden="true"></i><div class="tx">' + (p.address ? esc(p.address) : '주소 확인 중. 아래 지도는 이름으로 찾은 위치예요') + '<small>기사님이나 그랩에 이 주소를 보여 주세요</small></div></div>' +
       '<div class="map"><iframe title="' + esc(p.ko) + ' 지도" loading="lazy" referrerpolicy="no-referrer" src="https://www.google.com/maps?q=' + encodeURIComponent(q) + '&z=16&hl=ko&output=embed"></iframe></div>' +
-      '<div class="acts"><a class="btn" href="' + gm + '" target="_blank" rel="noopener noreferrer">구글 지도 열기</a><button type="button" class="btn sub" data-copy="' + esc(p.address || p.en) + '">주소 복사</button></div>';
+      '<div class="acts"><a class="btn" href="' + gm + '" target="_blank" rel="noopener noreferrer">구글 지도 열기</a><button type="button" class="btn sub" data-copy="' + esc(p.address || p.en) + '">주소 복사</button></div>' +
+      nearbyHtml(p);
+  }
+  function showPlace(p, backTo) {
+    var sheet = $('#sheet');
+    sheet.innerHTML = '<div class="grip"></div>' + placeHtml(p, backTo);
+    sheet.scrollTop = 0;
+    bindSheet([p]);
   }
   function bindSheet(list) {
     var sheet = $('#sheet');
-    $$('.row[data-k]', sheet).forEach(function (b) { b.addEventListener('click', function () { sheet.innerHTML = '<div class="grip"></div>' + placeHtml(list[+b.dataset.k]); bindSheet(list); }); });
+    $$('.row[data-k]', sheet).forEach(function (b) { b.addEventListener('click', function () { sheetStack = []; showPlace(list[+b.dataset.k]); }); });
+    var cur = list[0];
+    $$('.row[data-nb]', sheet).forEach(function (b) {
+      b.addEventListener('click', function () {
+        var kk = b.dataset.nb.split(':'), a = D.areas[cur.area], x = a[kk[0]][+kk[1]];
+        sheetStack.push(cur);
+        showPlace({ ko: x.ko, en: x.en, address: x.address, lat: x.lat, lng: x.lng, note: x.note }, cur.ko);
+      });
+    });
+    var bk = $('#sheetBack', sheet);
+    if (bk) bk.addEventListener('click', function () { var prev = sheetStack.pop(); if (prev) showPlace(prev, sheetStack.length ? sheetStack[sheetStack.length - 1].ko : null); });
     var cp = $('[data-copy]', sheet);
     if (cp) cp.addEventListener('click', function () {
       var t = cp.dataset.copy;
@@ -275,5 +324,10 @@
   }
   window.addEventListener('beforeinstallprompt', function (e) { e.preventDefault(); deferredInstall = e; if (D) banner(); });
   window.addEventListener('appinstalled', function () { var b = $('#banner'); if (b) b.innerHTML = ''; });
-  if ('serviceWorker' in navigator && location.protocol === 'https:') { window.addEventListener('load', function () { navigator.serviceWorker.register('sw.js').catch(function () {}); }); }
+  if ('serviceWorker' in navigator && location.protocol === 'https:') {
+    window.addEventListener('load', function () { navigator.serviceWorker.register('sw.js').catch(function () {}); });
+    // 새 버전이 설치돼 제어권이 바뀌면(이미 다른 버전이 제어 중이던 경우만) 한 번 새로고침해 최신으로
+    var hadCtrl = !!navigator.serviceWorker.controller, reloaded = false;
+    navigator.serviceWorker.addEventListener('controllerchange', function () { if (hadCtrl && !reloaded) { reloaded = true; location.reload(); } });
+  }
 })();

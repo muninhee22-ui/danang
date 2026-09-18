@@ -221,3 +221,24 @@ button{font:inherit;color:inherit}
 .tbtn{width:36px;height:36px;border-radius:999px;border:0;background:var(--card);color:var(--t2);display:inline-flex;align-items:center;justify-content:center;cursor:pointer}
 .tbtn .ph{font-size:20px}
 .tbtn:active{transform:scale(.94)}
+/* 근처 추천 (장소 시트 아래) */
+.nbh{font-size:18px;font-weight:700;margin:24px 0 4px}
+.nbl{display:flex;align-items:center;gap:6px;font-size:13px;font-weight:700;color:var(--t3);margin:12px 0 8px}
+.nbl .ph{font-size:16px}
+.nb .row{padding:12px 14px}
+.nb .ico{flex-basis:38px;width:38px;height:38px;border-radius:12px}
+.nbc{color:var(--t3);font-size:18px;flex:0 0 auto}
+.back{display:inline-flex;align-items:center;gap:2px;background:none;border:0;padding:0 0 10px;color:var(--blue-t);font-size:14px;font-weight:600;cursor:pointer}
+.back .ph{font-size:18px}
+.pnote{font-size:14px;color:var(--t2);margin-top:6px;line-height:1.5}
+@media (prefers-reduced-motion: no-preference){ .tbtn.spin .ph{animation:spin .8s linear infinite} @keyframes spin{to{transform:rotate(360deg)}} }
+/* 앱바 제목(영문 강조) + 낮/밤 두 개 골라 누르는 스위치 */
+.top h1{display:flex;flex-direction:column;line-height:1.1;min-width:0}
+.top h1 b{font-size:17px;font-weight:800;letter-spacing:-.01em}
+.top h1 span{font-size:12px;font-weight:500;color:var(--t3)}
+.seg{display:inline-flex;background:var(--card);border-radius:999px;padding:3px;gap:2px}
+.seg button{width:34px;height:30px;border:0;border-radius:999px;background:none;color:var(--t3);display:inline-flex;align-items:center;justify-content:center;cursor:pointer}
+.seg button .ph{font-size:18px}
+.seg button.on{background:var(--bg);color:var(--blue);box-shadow:0 1px 3px rgba(0,0,0,.12)}
+.seg button:active{transform:scale(.94)}
+.dday{font-size:12px;padding:0 10px;height:30px}
