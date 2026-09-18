@@ -49,6 +49,10 @@
     } catch (e) { drop(KEY_STORE); }
   }
 
+  form.pin.setAttribute('enterkeyhint', 'go');
+  form.pin.addEventListener('keydown', function (ev) {
+    if (ev.key === 'Enter' || ev.keyCode === 13) { ev.preventDefault(); form.requestSubmit ? form.requestSubmit() : form.querySelector('button').click(); }
+  });
   form.addEventListener('submit', function (ev) {
     ev.preventDefault();
     var pin = form.pin.value.trim();
